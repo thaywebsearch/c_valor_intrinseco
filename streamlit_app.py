@@ -2,15 +2,16 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import numpy as np
-import sys, os
+import sys
+import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from calculadora_gordon import (
     gordon_1estagio, gordon_2estagios, pbv_roe, h_model,
-    dcf_2estagios, dcf_1estagio, graham_number,
+    dcf_2estagios, graham_number,
     owner_earnings, oe_valuation, capm, calcular_wacc,
     multiplo_atual, preco_alvo_multiplo, upside_percent,
-    margem_seguranca, fmt
+    margem_seguranca
 )
 import ticker_search
 
@@ -126,11 +127,16 @@ with tab_buscar:
                         if ev and div_liq:
                             res["DCF"] = (ev - div_liq) / shares
                     alvs_r = []
-                    if eps: alvs_r.append(preco_alvo_multiplo(13.0, eps))
-                    if bvps: alvs_r.append(preco_alvo_multiplo(1.10, bvps))
-                    if ebitda_pa: alvs_r.append(preco_alvo_multiplo(11.0, ebitda_pa))
-                    if receita_pa: alvs_r.append(preco_alvo_multiplo(2.80, receita_pa))
-                    if fcf_pa: alvs_r.append(preco_alvo_multiplo(12.0, fcf_pa))
+                    if eps:
+                        alvs_r.append(preco_alvo_multiplo(13.0, eps))
+                    if bvps:
+                        alvs_r.append(preco_alvo_multiplo(1.10, bvps))
+                    if ebitda_pa:
+                        alvs_r.append(preco_alvo_multiplo(11.0, ebitda_pa))
+                    if receita_pa:
+                        alvs_r.append(preco_alvo_multiplo(2.80, receita_pa))
+                    if fcf_pa:
+                        alvs_r.append(preco_alvo_multiplo(12.0, fcf_pa))
                     alvs_v = [a for a in alvs_r if a]
                     if alvs_v:
                         res["Relativa"] = sum(alvs_v) / len(alvs_v)
@@ -164,11 +170,16 @@ with tab_buscar:
 
 # ============ GORDON 1 ============
 cols = tab_g1.columns(4)
-with cols[0]: d0_g1 = tab_g1.number_input("D0 (dividendo anual)", value=1.12, step=0.01, format="%.2f", key="g1_d0")
-with cols[1]: g_g1 = tab_g1.number_input("g (crescimento %)", value=7.0, step=0.5, format="%.1f", key="g1_g") / 100
-with cols[2]: r_g1 = tab_g1.number_input("r (retorno exigido %)", value=10.0, step=0.5, format="%.1f", key="g1_r") / 100
+with cols[0]:
+    d0_g1 = tab_g1.number_input("D0 (dividendo anual)", value=1.12, step=0.01, format="%.2f", key="g1_d0")
+with cols[1]:
+    g_g1 = tab_g1.number_input("g (crescimento %)", value=7.0, step=0.5, format="%.1f", key="g1_g") / 100
+with cols[2]:
+    r_g1 = tab_g1.number_input("r (retorno exigido %)", value=10.0, step=0.5, format="%.1f", key="g1_r") / 100
 if carregar_bac:
-    d0_g1 = 1.12; g_g1 = 0.07; r_g1 = 0.10
+    d0_g1 = 1.12
+    g_g1 = 0.07
+    r_g1 = 0.10
 if tab_g1.button("Calcular", key="btn_g1"):
     vi = gordon_1estagio(d0_g1, g_g1, r_g1)
     if vi:
@@ -196,7 +207,11 @@ n_g2 = cols[2].number_input("n anos", value=5, step=1, key="g2_n")
 g2_g2 = cols[3].number_input("g2 terminal %", value=4.0, step=0.5, format="%.1f", key="g2_g2") / 100
 r_g2 = cols[4].number_input("r %", value=10.0, step=0.5, format="%.1f", key="g2_r") / 100
 if carregar_bac:
-    d0_g2 = 1.12; g1_g2 = 0.08; n_g2 = 5; g2_g2 = 0.04; r_g2 = 0.10
+    d0_g2 = 1.12
+    g1_g2 = 0.08
+    n_g2 = 5
+    g2_g2 = 0.04
+    r_g2 = 0.10
 if tab_g2.button("Calcular", key="btn_g2"):
     vi = gordon_2estagios(d0_g2, g1_g2, g2_g2, n_g2, r_g2)
     if vi:
@@ -215,7 +230,10 @@ roe_pbv = cols[1].number_input("ROE %", value=10.5, step=0.5, format="%.1f", key
 r_pbv = cols[2].number_input("r %", value=10.0, step=0.5, format="%.1f", key="pbv_r") / 100
 g_pbv = cols[3].number_input("g % (0=EPV)", value=0.0, step=0.5, format="%.1f", key="pbv_g") / 100
 if carregar_bac:
-    bvps_pbv = 38.66; roe_pbv = 0.105; r_pbv = 0.10; g_pbv = 0.0
+    bvps_pbv = 38.66
+    roe_pbv = 0.105
+    r_pbv = 0.10
+    g_pbv = 0.0
 if tab_pbv.button("Calcular", key="btn_pbv"):
     vi = pbv_roe(bvps_pbv, roe_pbv, r_pbv, g_pbv)
     if vi:
@@ -242,7 +260,11 @@ g2_h = cols[2].number_input("g2 terminal %", value=4.0, step=0.5, format="%.1f",
 n_h = cols[3].number_input("n anos", value=5, step=1, key="h_n")
 r_h = cols[4].number_input("r %", value=10.0, step=0.5, format="%.1f", key="h_r") / 100
 if carregar_bac:
-    d0_h = 1.12; g1_h = 0.08; g2_h = 0.04; n_h = 5; r_h = 0.10
+    d0_h = 1.12
+    g1_h = 0.08
+    g2_h = 0.04
+    n_h = 5
+    r_h = 0.10
 if tab_h.button("Calcular", key="btn_h"):
     vi = h_model(d0_h, g1_h, g2_h, n_h, r_h)
     if vi:
@@ -272,7 +294,13 @@ wacc_dcf = cols2[0].number_input("WACC %", value=10.0, step=0.5, format="%.1f", 
 divida_dcf = cols2[1].number_input("Dívida Líquida (total)", value=5.0, step=1.0, format="%.2f", key="dcf_divida")
 acoes_dcf = cols2[2].number_input("Ações (total)", value=7.8, step=0.1, format="%.2f", key="dcf_acoes")
 if carregar_bac:
-    fcf0_dcf = 30.0; g1_dcf = 0.06; n_dcf = 5; g2_dcf = 0.03; wacc_dcf = 0.10; divida_dcf = 5.0; acoes_dcf = 7.8
+    fcf0_dcf = 30.0
+    g1_dcf = 0.06
+    n_dcf = 5
+    g2_dcf = 0.03
+    wacc_dcf = 0.10
+    divida_dcf = 5.0
+    acoes_dcf = 7.8
 if tab_dcf.button("Calcular", key="btn_dcf"):
     ev = dcf_2estagios(fcf0_dcf, g1_dcf, g2_dcf, n_dcf, wacc_dcf)
     if ev:
@@ -301,7 +329,8 @@ cols = tab_graham.columns(3)
 eps_g = cols[0].number_input("EPS (lucro por ação)", value=3.46, step=0.01, format="%.2f", key="graham_eps")
 bvps_g = cols[1].number_input("BVPS (book value)", value=38.66, step=0.01, format="%.2f", key="graham_bvps")
 if carregar_bac:
-    eps_g = 3.46; bvps_g = 38.66
+    eps_g = 3.46
+    bvps_g = 38.66
 if tab_graham.button("Calcular", key="btn_graham"):
     gn = graham_number(eps_g, bvps_g)
     if gn:
@@ -330,7 +359,11 @@ r_oe = cols[3].number_input("r %", value=10.0, step=0.5, format="%.1f", key="oe_
 cols2_oe = tab_oe.columns(2)
 g_oe = cols2_oe[0].number_input("g % (0=EPV)", value=3.0, step=0.5, format="%.1f", key="oe_g") / 100
 if carregar_bac:
-    oe_lucro = 3.46; oe_da = 0.50; oe_capex = 0.30; r_oe = 0.10; g_oe = 0.03
+    oe_lucro = 3.46
+    oe_da = 0.50
+    oe_capex = 0.30
+    r_oe = 0.10
+    g_oe = 0.03
 if tab_oe.button("Calcular", key="btn_oe"):
     oe = owner_earnings(oe_lucro, oe_da, oe_capex)
     vi = oe_valuation(oe, r_oe, g_oe)
@@ -363,7 +396,13 @@ dv_w = cols2_w[1].number_input("Dívida (D)", value=280.0, step=10.0, format="%.
 rd_w = cols2_w[2].number_input("Rd (custo dívida %)", value=4.5, step=0.1, format="%.1f", key="wacc_rd") / 100
 t_w = cols2_w[3].number_input("T (IR %)", value=21.0, step=1.0, format="%.0f", key="wacc_t") / 100
 if carregar_bac:
-    rf_w = 0.0425; beta_w = 1.35; rm_w = 0.10; eq_w = 340.0; dv_w = 280.0; rd_w = 0.045; t_w = 0.21
+    rf_w = 0.0425
+    beta_w = 1.35
+    rm_w = 0.10
+    eq_w = 340.0
+    dv_w = 280.0
+    rd_w = 0.045
+    t_w = 0.21
 if tab_wacc.button("Calcular", key="btn_wacc"):
     re_w = capm(rf_w, beta_w, rm_w)
     wacc_w = calcular_wacc(eq_w, dv_w, re_w, rd_w, t_w)
@@ -392,7 +431,9 @@ cols2 = tab_rel.columns(3)
 fator_mult_setor = cols2[0].number_input("Múltiplo setorial", value=13.0, step=0.5, format="%.1f", key="rel_mult")
 fator_pm = cols2[1].number_input("Preço mercado", value=preco_mercado, step=1.0, format="%.2f", key="rel_pm")
 if carregar_bac:
-    fator_fund = 3.46; fator_mult_setor = 13.0; fator_nome = "P/E"
+    fator_fund = 3.46
+    fator_mult_setor = 13.0
+    fator_nome = "P/E"
 if tab_rel.button("Calcular", key="btn_rel"):
     mult_a = multiplo_atual(fator_pm, fator_fund)
     alvo = preco_alvo_multiplo(fator_mult_setor, fator_fund)
@@ -436,12 +477,26 @@ if tab_rel.button("Calcular BAC múltiplos", key="btn_rel_bac") or carregar_bac:
 # ============ CONCLUSÃO ============
 tab_conv = tab_conc
 if tab_conv.button("Calcular todos os modelos", key="btn_conc") or carregar_bac:
-    d0 = 1.12; bvps = 38.66; roe = 0.105; r = 0.10; g = 0.07
-    g1 = 0.08; g2 = 0.04; n = 5
-    fcf0 = 30.0; divida = 5.0; acoes = 7.8; wacc = 0.10
-    dcf_g1 = 0.06; dcf_g2 = 0.03; dcf_n = 5
+    d0 = 1.12
+    bvps = 38.66
+    roe = 0.105
+    r = 0.10
+    g = 0.07
+    g1 = 0.08
+    g2 = 0.04
+    n = 5
+    fcf0 = 30.0
+    divida = 5.0
+    acoes = 7.8
+    wacc = 0.10
+    dcf_g1 = 0.06
+    dcf_g2 = 0.03
+    dcf_n = 5
     eps = 3.46
-    oe_l = 3.46; oe_d = 0.50; oe_c = 0.30; oe_g = 0.03
+    oe_l = 3.46
+    oe_d = 0.50
+    oe_c = 0.30
+    oe_g = 0.03
 
     resultados = {
         "Gordon 1 estágio": gordon_1estagio(d0, g, r),

@@ -17,7 +17,9 @@ Modelos:
    I) Avaliacao Relativa:  Preco Alvo = Multiplo Setorial * Fundamental
 """
 
-import sys, csv, os
+import sys
+import csv
+import os
 from datetime import datetime
 import ticker_search
 
@@ -367,7 +369,6 @@ def analisar_bac():
     rm = 0.10
     bac_equity = 340.0
     bac_divida = 280.0
-    bac_re = 0.0
     bac_rd = 0.045
     bac_t = 0.21
 
@@ -378,7 +379,7 @@ def analisar_bac():
     rel_receita_pa = 12.82
     rel_fcf_pa = 3.85
 
-    print(f"\nParametros:")
+    print("\nParametros:")
     print(f"  D0             = $ {d0:.2f}")
     print(f"  Preco mercado  = $ {preco:.2f}")
     print(f"  BVPS           = $ {bvps:.2f}")
@@ -387,20 +388,20 @@ def analisar_bac():
     print(f"  g (1 estagio)  = {g*100:.1f}%")
     print(f"  g1 (2 estag.)  = {g1*100:.1f}% ({n} anos)")
     print(f"  g2 (perpetuo)  = {g2*100:.1f}%")
-    print(f"  --- DCF ---")
+    print("  --- DCF ---")
     print(f"  FCF0 (total)   = $ {fcf0:.1f} B")
     print(f"  Divida Liquida = $ {divida_liquida:.1f} B")
     print(f"  Acoes          = {acoes:.1f} B")
     print(f"  WACC           = {wacc*100:.1f}%")
     print(f"  g1 (cresc.)    = {dcf_g1*100:.1f}% ({dcf_n} anos)")
     print(f"  g2 (terminal)  = {dcf_g2*100:.1f}%")
-    print(f"  --- Graham ---")
+    print("  --- Graham ---")
     print(f"  EPS            = $ {eps:.2f}")
-    print(f"  --- Owner Earnings ---")
+    print("  --- Owner Earnings ---")
     print(f"  Lucro Liquido  = $ {oe_lucro:.2f}")
     print(f"  D&A            = $ {oe_da:.2f}")
     print(f"  Capex Manut.   = $ {oe_capex:.2f}")
-    print(f"  --- CAPM / WACC ---")
+    print("  --- CAPM / WACC ---")
     print(f"  RF (T 10y)     = {rf*100:.2f}%")
     print(f"  Beta           = {beta:.2f}")
     print(f"  RM (mercado)   = {rm*100:.0f}%")
@@ -408,7 +409,7 @@ def analisar_bac():
     print(f"  Divida (D)     = $ {bac_divida:.0f} B")
     print(f"  Rd (custo divida) = {bac_rd*100:.1f}%")
     print(f"  T (taxa)       = {bac_t*100:.0f}%")
-    print(f"  --- Relativa ---")
+    print("  --- Relativa ---")
     print(f"  EPS            = $ {rel_eps:.2f}")
     print(f"  BVPS           = $ {rel_bvps:.2f}")
     print(f"  EBITDA/acao    = $ {rel_ebitda_pa:.2f}")
@@ -537,7 +538,7 @@ def analisar_bac():
     print("   MODELO F: GRAHAM NUMBER")
     print("=" * 65)
     gn = graham_number(eps, bvps)
-    print(f"\n  Graham Number = sqrt(22.5 * EPS * BVPS)")
+    print("\n  Graham Number = sqrt(22.5 * EPS * BVPS)")
     print(f"                 = sqrt(22.5 * {eps:.2f} * {bvps:.2f})")
     print(f"                 = $ {fmt(gn)}")
     if gn is not None:
@@ -554,7 +555,7 @@ def analisar_bac():
     print("   MODELO G: OWNER EARNINGS (WARREN BUFFETT)")
     print("=" * 65)
     oe = owner_earnings(oe_lucro, oe_da, oe_capex)
-    print(f"\n  OE = Lucro Liquido + D&A - Capex Manutencao")
+    print("\n  OE = Lucro Liquido + D&A - Capex Manutencao")
     print(f"     = {oe_lucro:.2f} + {oe_da:.2f} - {oe_capex:.2f}")
     print(f"     = $ {oe:.2f} / acao")
     print(f"\n{'Cenario':<15} {'g':>6} {'r':>6} {'OE':>6} {'VI':>10} {'Margem':>8}")
@@ -581,13 +582,13 @@ def analisar_bac():
     print("=" * 65)
     re_capm = capm(rf, beta, rm)
     wacc_val = calcular_wacc(bac_equity, bac_divida, re_capm, bac_rd, bac_t)
-    print(f"\n  CAPM:")
-    print(f"    Re = RF + Beta * (RM - RF)")
+    print("\n  CAPM:")
+    print("    Re = RF + Beta * (RM - RF)")
     print(f"       = {rf*100:.2f}% + {beta:.2f} * ({rm*100:.0f}% - {rf*100:.2f}%)")
     print(f"       = {re_capm*100:.2f}%")
     if wacc_val is not None:
-        print(f"\n  WACC:")
-        print(f"    WACC = E/V * Re + D/V * Rd * (1 - T)")
+        print("\n  WACC:")
+        print("    WACC = E/V * Re + D/V * Rd * (1 - T)")
         print(f"         = {bac_equity:.0f}/{bac_equity+bac_divida:.0f} * {re_capm*100:.2f}% + {bac_divida:.0f}/{bac_equity+bac_divida:.0f} * {bac_rd*100:.1f}% * (1 - {bac_t*100:.0f}%)")
         print(f"         = {wacc_val*100:.2f}%")
 
@@ -712,7 +713,6 @@ def analisar_empresa_ticker(ticker_str):
     divida_liq = params["divida_liquida"]
     shares = params["shares"]
     fcf_total = params["fcf_total"]
-    beta = params["beta"]
     if not preco or preco <= 0:
         print("Preco nao disponivel.")
         return
@@ -887,7 +887,7 @@ def modo_interativo():
         pm = input("Preco de mercado (opcional): ")
         pm = float(pm) if pm.strip() else None
         gn = graham_number(eps, bvps)
-        print(f"\n--- Graham Number ---")
+        print("\n--- Graham Number ---")
         print(f"  Graham Number = sqrt(22.5 * {eps:.2f} * {bvps:.2f})")
         print(f"                 = $ {fmt(gn)}")
         if gn is not None and pm and pm > 0:
@@ -909,7 +909,7 @@ def modo_interativo():
         pm = float(pm) if pm.strip() else None
         oe = owner_earnings(lucro, da, capex)
         vi = oe_valuation(oe, r, g)
-        print(f"\n--- Owner Earnings ---")
+        print("\n--- Owner Earnings ---")
         print(f"  OE = {lucro:.2f} + {da:.2f} - {capex:.2f} = $ {oe:.2f}")
         if vi is not None:
             print(f"  Valor Intrinseco (g={g*100:.1f}%, r={r*100:.1f}%): $ {fmt(vi)}")
@@ -919,189 +919,6 @@ def modo_interativo():
                 status = "SUBVALORIZADA" if ms > 0 else "SOBREVALORIZADA"
                 print(f"  Margem de Seguranca:    {fmt(ms, 2)}% ({status})")
             print(f"  Preco / OE (P/OE):      {fmt(pm/oe, 2)}")
-
-
-# ======================== CLI ========================
-
-def main():
-    if len(sys.argv) > 1:
-        cmd = sys.argv[1]
-        if cmd == "--quick":
-            d0 = float(sys.argv[2])
-            g = float(sys.argv[3]) / 100
-            r = float(sys.argv[4]) / 100
-            pm = float(sys.argv[5]) if len(sys.argv) > 5 else None
-            exibir_resultado('g1', "Gordon 1 Estagio", gordon_1estagio(d0, g, r), d0, g, r, pm)
-        elif cmd == "--two-stage":
-            d0 = float(sys.argv[2])
-            g1 = float(sys.argv[3]) / 100
-            g2 = float(sys.argv[4]) / 100
-            n = int(sys.argv[5])
-            r = float(sys.argv[6]) / 100
-            pm = float(sys.argv[7]) if len(sys.argv) > 7 else None
-            vi = gordon_2estagios(d0, g1, g2, n, r)
-            exibir_resultado('g2', f"Gordon 2 Estagios", vi, d0, g1, r, pm,
-                             extra={"g2 perpetuo": f"{g2*100:.1f}%"})
-        elif cmd == "--h-model":
-            d0 = float(sys.argv[2])
-            g1 = float(sys.argv[3]) / 100
-            g2 = float(sys.argv[4]) / 100
-            n = int(sys.argv[5])
-            r = float(sys.argv[6]) / 100
-            pm = float(sys.argv[7]) if len(sys.argv) > 7 else None
-            vi = h_model(d0, g1, g2, n, r)
-            exibir_resultado('h', f"H-Model (g1={g1*100:.0f}% -> g2={g2*100:.0f}%, {n}a)",
-                             vi, d0, g1, r, pm,
-                             extra={"g2 terminal": f"{g2*100:.1f}%", "n": str(n)})
-        elif cmd == "--dcf":
-            fcf0 = float(sys.argv[2])
-            g1 = float(sys.argv[3]) / 100
-            g2 = float(sys.argv[4]) / 100
-            n = int(sys.argv[5])
-            wacc = float(sys.argv[6]) / 100
-            divida = float(sys.argv[7])
-            acoes = float(sys.argv[8])
-            pm = float(sys.argv[9]) if len(sys.argv) > 9 else None
-            ev = dcf_2estagios(fcf0, g1, g2, n, wacc)
-            exibir_resultado_dcf(ev, divida, acoes, pm,
-                                 label=f"DCF (g1={g1*100:.0f}%/{n}a -> g2={g2*100:.0f}%, WACC={wacc*100:.0f}%)",
-                                 extra={"g1": f"{g1*100:.1f}%", "g2": f"{g2*100:.1f}%", "n": str(n), "WACC": f"{wacc*100:.1f}%"})
-        elif cmd == "--graham":
-            eps = float(sys.argv[2])
-            bvps = float(sys.argv[3])
-            pm = float(sys.argv[4]) if len(sys.argv) > 4 else None
-            gn = graham_number(eps, bvps)
-            print(f"\n--- Graham Number ---")
-            print(f"  Graham Number = sqrt(22.5 * {eps:.2f} * {bvps:.2f})")
-            print(f"                 = $ {fmt(gn)}")
-            if gn is not None and pm and pm > 0:
-                ms = margem_seguranca(gn, pm)
-                if ms is not None:
-                    status = "SUBVALORIZADA" if ms > 0 else "SOBREVALORIZADA"
-                    print(f"  Margem de Seguranca:    {fmt(ms, 2)}% ({status})")
-                print(f"  P/E atual:              {fmt(pm/eps, 2)} (Graham max: 15)")
-                print(f"  P/B atual:              {fmt(pm/bvps, 2)} (Graham max: 1.5)")
-        elif cmd == "--wacc":
-            rf_c = float(sys.argv[2]) / 100
-            beta_c = float(sys.argv[3])
-            rm_c = float(sys.argv[4]) / 100
-            eq_c = float(sys.argv[5])
-            dv_c = float(sys.argv[6])
-            rd_c = float(sys.argv[7]) / 100
-            t_c = float(sys.argv[8]) / 100
-            re_c = capm(rf_c, beta_c, rm_c)
-            wacc_c = calcular_wacc(eq_c, dv_c, re_c, rd_c, t_c)
-            print(f"\n--- CAPM ---")
-            print(f"  Re = {rf_c*100:.2f}% + {beta_c:.2f} * ({rm_c*100:.0f}% - {rf_c*100:.2f}%)")
-            print(f"     = {re_c*100:.2f}%")
-            if wacc_c is not None:
-                print(f"\n--- WACC ---")
-                print(f"  WACC = {wacc_c*100:.2f}%")
-        elif cmd == "--relativa":
-            pm_r = float(sys.argv[2])
-            pares_r = []
-            i = 3
-            while i + 2 < len(sys.argv):
-                nome_r = sys.argv[i]
-                fund_r = float(sys.argv[i+1])
-                mult_r = float(sys.argv[i+2])
-                pares_r.append((nome_r, fund_r, mult_r))
-                i += 3
-            if not pares_r:
-                print("Uso: --relativa preco nome1 fund1 mult1 nome2 fund2 mult2 ...")
-                return
-            print(f"\n{'Multiplo':<20} {'Atual':>8} {'Setor':>8} {'Alvo':>8} {'Upside':>8}")
-            print("-" * 56)
-            alvos_r = []
-            for nome, fund, mult_s in pares_r:
-                mult_a = multiplo_atual(pm_r, fund)
-                alvo = preco_alvo_multiplo(mult_s, fund)
-                ups = upside_percent(alvo, pm_r)
-                if alvo is not None:
-                    alvos_r.append(alvo)
-                print(f"{nome:<20} {fmt(mult_a,2):>8} {mult_s:>8.1f}x ${fmt(alvo,2):>8} {fmt(ups,1):>8}%")
-            if alvos_r:
-                media_alvo = sum(alvos_r) / len(alvos_r)
-                ups_media = upside_percent(media_alvo, pm_r)
-                print(f"\n  >>> Media dos alvos: $ {fmt(media_alvo,2)} ({ups_media:+.1f}%)")
-        elif cmd == "--oe":
-            lucro = float(sys.argv[2])
-            da = float(sys.argv[3])
-            capex = float(sys.argv[4])
-            r = float(sys.argv[5]) / 100
-            g = float(sys.argv[6]) / 100 if len(sys.argv) > 6 else 0
-            pm = float(sys.argv[7]) if len(sys.argv) > 7 else None
-            oe = owner_earnings(lucro, da, capex)
-            vi = oe_valuation(oe, r, g)
-            print(f"\n--- Owner Earnings ---")
-            print(f"  OE = {lucro:.2f} + {da:.2f} - {capex:.2f} = $ {oe:.2f}")
-            if vi is not None:
-                print(f"  Valor Intrinseco (g={g*100:.1f}%, r={r*100:.1f}%): $ {fmt(vi)}")
-            if pm and pm > 0 and vi is not None:
-                ms = margem_seguranca(vi, pm)
-                if ms is not None:
-                    status = "SUBVALORIZADA" if ms > 0 else "SOBREVALORIZADA"
-                    print(f"  Margem de Seguranca:    {fmt(ms, 2)}% ({status})")
-            print(f"  Preco / OE (P/OE):      {fmt(pm/oe, 2)}")
-
-    elif op == 9:
-        print("\n--- CAPM ---")
-        rf_i = float(input("RF (livre de risco %, ex: 4.25): ")) / 100
-        beta_i = float(input("Beta: "))
-        rm_i = float(input("RM (retorno mercado %, ex: 10): ")) / 100
-        re_i = capm(rf_i, beta_i, rm_i)
-        print(f"  Re (custo equity) = {re_i*100:.2f}%")
-        print("\n--- WACC ---")
-        eq_i = float(input("Equity (valor mercado, ex: 340): "))
-        dv_i = float(input("Divida (valor mercado, ex: 280): "))
-        rd_i = float(input("Rd (custo divida %, ex: 4.5): ")) / 100
-        t_i = float(input("T (aliquota IR % , ex: 21): ")) / 100
-        wacc_i = calcular_wacc(eq_i, dv_i, re_i, rd_i, t_i)
-        if wacc_i is not None:
-            print(f"  WACC = {wacc_i*100:.2f}%")
-            v = eq_i + dv_i
-            print(f"\n  Ponderacao:")
-            print(f"    Equity: {eq_i:.1f} / {v:.1f} = {eq_i/v*100:.1f}%  x {re_i*100:.2f}% = {eq_i/v*re_i*100:.2f}%")
-            print(f"    Divida: {dv_i:.1f} / {v:.1f} = {dv_i/v*100:.1f}%  x {rd_i*100:.1f}% x (1-{t_i*100:.0f}%) = {dv_i/v*rd_i*(1-t_i)*100:.2f}%")
-
-    elif op == 10:
-        print("\n--- Avaliacao Relativa ---")
-        print("Informe os dados DA empresa e o multiplo DO SETOR:")
-        pares = []
-        while True:
-            nome = input("Nome do multiplo (ex: P/E) ou Enter para calcular: ").strip()
-            if not nome:
-                break
-            fundamental = float(input(f"  Valor fundamental ({nome}): "))
-            mult_setor = float(input(f"  Multiplo setorial ({nome}): "))
-            pares.append((nome, fundamental, mult_setor))
-        pm = input("Preco de mercado (opcional): ")
-        pm = float(pm) if pm.strip() else None
-        if not pares:
-            print("Nenhum multiplo informado.")
-            return
-        print(f"\n{'Multiplo':<20} {'Atual':>8} {'Setor':>8} {'Alvo':>8} {'Upside':>8}")
-        print("-" * 56)
-        alvos = []
-        for nome, fund, mult_s in pares:
-            mult_a = multiplo_atual(pm, fund)
-            alvo = preco_alvo_multiplo(mult_s, fund)
-            ups = upside_percent(alvo, pm)
-            if alvo is not None:
-                alvos.append(alvo)
-            mult_a_s = fmt(mult_a, 2) if mult_a is not None else "N/A"
-            alvo_s = fmt(alvo, 2) if alvo is not None else "N/A"
-            ups_s = f"{ups:+.1f}%" if ups is not None else "N/A"
-            print(f"{nome:<20} {mult_a_s:>8} {mult_s:>8.1f}x ${alvo_s:>8} {ups_s:>8}")
-        if alvos:
-            media_alvo = sum(alvos) / len(alvos)
-            ups_media = upside_percent(media_alvo, pm)
-            print(f"\n  >>> Media dos alvos: $ {fmt(media_alvo,2)} ({ups_media:+.1f}%)")
-
-    elif op == 11:
-        ticker_input = input("Ticker da empresa (ex: AAPL, PETR4.SA, BAC): ").strip()
-        if ticker_input:
-            analisar_empresa_ticker(ticker_input)
 
 
 # ======================== CLI ========================
@@ -1154,7 +971,7 @@ def main():
             bvps = float(sys.argv[3])
             pm = float(sys.argv[4]) if len(sys.argv) > 4 else None
             gn = graham_number(eps, bvps)
-            print(f"\n--- Graham Number ---")
+            print("\n--- Graham Number ---")
             print(f"  Graham Number = sqrt(22.5 * {eps:.2f} * {bvps:.2f})")
             print(f"                 = $ {fmt(gn)}")
             if gn is not None and pm and pm > 0:
@@ -1173,7 +990,7 @@ def main():
             pm = float(sys.argv[7]) if len(sys.argv) > 7 else None
             oe = owner_earnings(lucro, da, capex)
             vi = oe_valuation(oe, r, g)
-            print(f"\n--- Owner Earnings ---")
+            print("\n--- Owner Earnings ---")
             print(f"  OE = {lucro:.2f} + {da:.2f} - {capex:.2f} = $ {oe:.2f}")
             if vi is not None:
                 print(f"  Valor Intrinseco (g={g*100:.1f}%, r={r*100:.1f}%): $ {fmt(vi)}")
@@ -1193,11 +1010,11 @@ def main():
             t_c = float(sys.argv[8]) / 100
             re_c = capm(rf_c, beta_c, rm_c)
             wacc_c = calcular_wacc(eq_c, dv_c, re_c, rd_c, t_c)
-            print(f"\n--- CAPM ---")
+            print("\n--- CAPM ---")
             print(f"  Re = {rf_c*100:.2f}% + {beta_c:.2f} * ({rm_c*100:.0f}% - {rf_c*100:.2f}%)")
             print(f"     = {re_c*100:.2f}%")
             if wacc_c is not None:
-                print(f"\n--- WACC ---")
+                print("\n--- WACC ---")
                 print(f"  WACC = {wacc_c*100:.2f}%")
         elif cmd == "--relativa":
             pm_r = float(sys.argv[2])
@@ -1233,7 +1050,7 @@ def main():
             g = float(sys.argv[5]) / 100 if len(sys.argv) > 5 else 0
             pm = float(sys.argv[6]) if len(sys.argv) > 6 else None
             vi = pbv_roe(bvps, roe, r, g)
-            exibir_resultado('pbv', f"P/B x ROE", vi, bvps * roe, g, r, pm,
+            exibir_resultado('pbv', "P/B x ROE", vi, bvps * roe, g, r, pm,
                              extra={"BVPS": f"${bvps:.2f}", "ROE": f"{roe*100:.1f}%"})
         elif cmd == "--ticker":
             ticker_sym = sys.argv[2]
