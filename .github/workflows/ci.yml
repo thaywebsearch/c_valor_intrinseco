@@ -70,7 +70,7 @@ jobs:
           assert cg.gordon_1estagio(1.0, 0.05, 0.10) == 21.0
           
           # Test Gordon 2
-          assert abs(cg.gordon_2estagios(1.0, 0.08, 0.04, 5, 0.10) - 26.76) < 0.01
+          assert abs(cg.gordon_2estagios(1.0, 0.08, 0.04, 5, 0.10) - 20.55) < 0.01
           
           # Test Graham
           assert abs(cg.graham_number(3.46, 38.66) - 54.86) < 0.01
