@@ -314,7 +314,7 @@ if tab_dcf.button("Calcular", key="btn_dcf"):
         faixa_g = np.round(np.linspace(max(0, g2_dcf-0.03), min(0.10, g2_dcf+0.03), 9), 3)
         faixa_r = np.round(np.linspace(max(0.03, wacc_dcf-0.04), min(0.20, wacc_dcf+0.04), 9), 3)
         df = tabela_sensibilidade_modelo(
-            lambda gx, rx: (dcf_2estagios(fcf0_dcf, g1_dcf, gx, n_dcf, rx) - divida_dcf) / acoes_dcf,
+            lambda gx, rx: ((dcf_2estagios(fcf0_dcf, g1_dcf, gx, n_dcf, rx) or 0) - divida_dcf) / acoes_dcf,
             faixa_g, faixa_r)
         chart = sensibilidade_heatmap(df, "DCF - Sensibilidade ($/ação)")
         if chart:
