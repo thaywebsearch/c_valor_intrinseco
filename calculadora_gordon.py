@@ -803,6 +803,7 @@ def modo_interativo():
     print("  9 - CAPM / WACC")
     print("  10 - Avaliacao Relativa (Multiplos)")
     print("  11 - Buscar empresa por ticker (Yahoo Finance)")
+    print("  12 - Listar empresas S&P 500")
     print("  0 - Sair")
 
     try:
@@ -919,6 +920,90 @@ def modo_interativo():
                 status = "SUBVALORIZADA" if ms > 0 else "SOBREVALORIZADA"
                 print(f"  Margem de Seguranca:    {fmt(ms, 2)}% ({status})")
             print(f"  Preco / OE (P/OE):      {fmt(pm/oe, 2)}")
+
+    elif op == 9:
+        print("\n--- CAPM ---")
+        rf_i = float(input("RF (livre de risco %, ex: 4.25): ")) / 100
+        beta_i = float(input("Beta: "))
+        rm_i = float(input("RM (retorno mercado %, ex: 10): ")) / 100
+        re_i = capm(rf_i, beta_i, rm_i)
+        print(f"  Re (custo equity) = {re_i*100:.2f}%")
+        print("\n--- WACC ---")
+        eq_i = float(input("Equity (valor mercado, ex: 340): "))
+        dv_i = float(input("Divida (valor mercado, ex: 280): "))
+        rd_i = float(input("Rd (custo divida %, ex: 4.5): ")) / 100
+        t_i = float(input("T (aliquota IR % , ex: 21): ")) / 100
+        wacc_i = calcular_wacc(eq_i, dv_i, re_i, rd_i, t_i)
+        if wacc_i is not None:
+            print(f"  WACC = {wacc_i*100:.2f}%")
+            v = eq_i + dv_i
+            print("\n  Ponderacao:")
+            print(f"    Equity: {eq_i:.1f} / {v:.1f} = {eq_i/v*100:.1f}%  x {re_i*100:.2f}% = {eq_i/v*re_i*100:.2f}%")
+            print(f"    Divida: {dv_i:.1f} / {v:.1f} = {dv_i/v*100:.1f}%  x {rd_i*100:.1f}% x (1-{t_i*100:.0f}%) = {dv_i/v*rd_i*(1-t_i)*100:.2f}%")
+
+    elif op == 10:
+        print("\n--- Avaliacao Relativa ---")
+        print("Informe os dados DA empresa e o multiplo DO SETOR:")
+        pares = []
+        while True:
+            nome = input("Nome do multiplo (ex: P/E) ou Enter para calcular: ").strip()
+            if not nome:
+                break
+            fundamental = float(input(f"  Valor fundamental ({nome}): "))
+            mult_setor = float(input(f"  Multiplo setorial ({nome}): "))
+            pares.append((nome, fundamental, mult_setor))
+        pm = input("Preco de mercado (opcional): ")
+        pm = float(pm) if pm.strip() else None
+        if not pares:
+            print("Nenhum multiplo informado.")
+            return
+        print(f"\n{'Multiplo':<20} {'Atual':>8} {'Setor':>8} {'Alvo':>8} {'Upside':>8}")
+        print("-" * 56)
+        alvos = []
+        for nome, fund, mult_s in pares:
+            mult_a = multiplo_atual(pm, fund)
+            alvo = preco_alvo_multiplo(mult_s, fund)
+            ups = upside_percent(alvo, pm)
+            if alvo is not None:
+                alvos.append(alvo)
+            mult_a_s = fmt(mult_a, 2) if mult_a is not None else "N/A"
+            alvo_s = fmt(alvo, 2) if alvo is not None else "N/A"
+            ups_s = f"{ups:+.1f}%" if ups is not None else "N/A"
+            print(f"{nome:<20} {mult_a_s:>8} {mult_s:>8.1f}x ${alvo_s:>8} {ups_s:>8}")
+        if alvos:
+            media_alvo = sum(alvos) / len(alvos)
+            ups_media = upside_percent(media_alvo, pm)
+            print(f"\n  >>> Media dos alvos: $ {fmt(media_alvo,2)} ({ups_media:+.1f}%)")
+
+    elif op == 11:
+        ticker_input = input("Ticker da empresa (ex: AAPL, PETR4.SA, BAC): ").strip()
+        if ticker_input:
+            analisar_empresa_ticker(ticker_input)
+
+    elif op == 12:
+        import sp500
+        tickers = sp500.listar_sp500()
+        print(f"\nS&P 500: {len(tickers)} empresas disponiveis")
+        busca = input("Buscar por nome do ticker (Enter=listar todos): ").strip()
+        if busca:
+            resultados = sp500.buscar_sp500_por_nome(busca)
+            if not resultados:
+                print(f"Nenhum ticker encontrado com '{busca}'.")
+                return
+        else:
+            resultados = tickers
+        print(f"\nTickers encontrados ({len(resultados)}):")
+        mostrar = min(20, len(resultados))
+        for i in range(0, mostrar, 5):
+            print("  " + "  ".join(f"{t:<8}" for t in resultados[i:i+5]))
+        if len(resultados) > mostrar:
+            print(f"  ... e mais {len(resultados) - mostrar} tickers")
+        sel = input("\nDigite um ticker para analisar (ou Enter para sair): ").strip().upper()
+        if sel:
+            if sel in resultados:
+                analisar_empresa_ticker(sel)
+            else:
+                print(f"Ticker '{sel}' nao esta na lista S&P 500.")
 
 
 # ======================== CLI ========================
@@ -1055,6 +1140,12 @@ def main():
         elif cmd == "--ticker":
             ticker_sym = sys.argv[2]
             analisar_empresa_ticker(ticker_sym)
+        elif cmd == "--sp500":
+            import sp500
+            tickers = sp500.listar_sp500()
+            print(f"\nS&P 500: {len(tickers)} empresas")
+            for t in tickers:
+                print(t)
         elif cmd == "--bac":
             analisar_bac()
         else:
@@ -1070,6 +1161,8 @@ def main():
             print("  python calculadora_gordon.py --wacc RF% beta RM% equity divida Rd% T%")
             print("  python calculadora_gordon.py --relativa preco nome fund mult [nome fund mult ...]")
             print("  python calculadora_gordon.py --pbv BVPS ROE% r% [g%] [preco]")
+            print("  python calculadora_gordon.py --ticker SYM")
+            print("  python calculadora_gordon.py --sp500")
     else:
         modo_interativo()
 

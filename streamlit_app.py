@@ -23,9 +23,9 @@ side = st.sidebar
 preco_mercado = side.number_input("Preço de Mercado ($)", min_value=0.0, value=51.80, step=1.0, format="%.2f")
 carregar_bac = side.button("Carregar BAC")
 
-tab_buscar, tab_g1, tab_g2, tab_pbv, tab_h, tab_dcf, tab_graham, tab_oe, tab_wacc, tab_rel, tab_conc = \
+tab_buscar, tab_g1, tab_g2, tab_pbv, tab_h, tab_dcf, tab_graham, tab_oe, tab_wacc, tab_rel, tab_conc, tab_sp500 = \
     st.tabs(["Buscar Ticker", "Gordon 1", "Gordon 2", "P/B × ROE", "H-Model",
-             "DCF", "Graham", "Owner Earnings", "CAPM/WACC", "Relativa", "Conclusão"])
+             "DCF", "Graham", "Owner Earnings", "CAPM/WACC", "Relativa", "Conclusão", "S&P 500"])
 
 def sensibilidade_heatmap(df, titulo):
     df_long = df.melt(id_vars=["g"], var_name="r", value_name="VI")
@@ -555,3 +555,32 @@ if tab_conv.button("Calcular todos os modelos", key="btn_conc") or carregar_bac:
         tab_conv.metric(f"Média de {len(vis_validos)} modelos", f"$ {media:.2f}",
                        f"{ms_media:+.1f}%" if ms_media else None)
         tab_conv.success(f"**Recomendação: {rec}**")
+
+# ============ S&P 500 ============
+with tab_sp500:
+    st.subheader("S&P 500 - Lista de Empresas")
+    import sp500
+    tickers_sp = sp500.listar_sp500()
+    st.info(f"{len(tickers_sp)} empresas disponiveis")
+    busca_sp = st.text_input("Buscar ticker (ex: AAPL, MS)", key="sp500_busca")
+    if busca_sp:
+        resultados_sp = sp500.buscar_sp500_por_nome(busca_sp)
+    else:
+        resultados_sp = tickers_sp
+    if resultados_sp:
+        st.write(f"**{len(resultados_sp)}** resultados")
+        cols_per_row = 6
+        visiveis = resultados_sp[:120]
+        rows = [visiveis[i:i+cols_per_row] for i in range(0, len(visiveis), cols_per_row)]
+        for row in rows:
+            cols = st.columns(cols_per_row)
+            for i, t in enumerate(row):
+                if cols[i].button(t, key=f"sp_{t}"):
+                    with st.spinner(f"A calcular {t}..."):
+                        from ticker_search import executar_analise_completa
+                        res = executar_analise_completa(t)
+                        if res:
+                            dados, params = res
+                            st.success(f"{t}: Preco ${dados['preco']:.2f}")
+        if len(resultados_sp) > 120:
+            st.caption(f"... e mais {len(resultados_sp) - 120} tickers")
