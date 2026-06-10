@@ -37,8 +37,7 @@ def sensibilidade_heatmap(df, titulo):
         x=alt.X("r:O", title="r (%)", sort=None),
         y=alt.Y("g:O", title="g (%)", sort=None),
         color=alt.Color("VI:Q", title="VI ($)",
-                        scale=alt.Scale(scheme="rdylgn", domain=[
-                            df_long["VI"].min(), df_long["VI"].max()])),
+                        scale=alt.Scale(scheme="redyellowgreen")),
         tooltip=["g", "r", alt.Tooltip("VI:Q", format=".2f")]
     ).properties(width=500, height=400, title=titulo)
     return chart
