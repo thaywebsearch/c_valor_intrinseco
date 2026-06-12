@@ -16,12 +16,20 @@ from calculadora_gordon import (
 import ticker_search
 
 st.set_page_config(page_title="Calculadora de Valor Intrínseco", layout="wide")
+
+if "sp500_ticker" not in st.session_state:
+    st.session_state.sp500_ticker = None
+if "sp500_dados" not in st.session_state:
+    st.session_state.sp500_dados = None
+
 st.title("Calculadora de Valor Intrínseco")
 st.markdown("Gordon, P/B×ROE, H-Model, DCF, Graham, Owner Earnings, CAPM/WACC, Relativa e Busca por Ticker")
 
 side = st.sidebar
 preco_mercado = side.number_input("Preço de Mercado ($)", min_value=0.0, value=51.80, step=1.0, format="%.2f")
 carregar_bac = side.button("Carregar BAC")
+if st.session_state.sp500_ticker:
+    side.success(f"Ticker: **{st.session_state.sp500_ticker}** (${preco_mercado:.2f})")
 
 tab_buscar, tab_g1, tab_g2, tab_pbv, tab_h, tab_dcf, tab_graham, tab_oe, tab_wacc, tab_rel, tab_conc, tab_sp500 = \
     st.tabs(["Buscar Ticker", "Gordon 1", "Gordon 2", "P/B × ROE", "H-Model",
@@ -56,9 +64,15 @@ def tabela_sensibilidade_modelo(func, faixa_g, faixa_r, **kwargs):
 # ============ BUSCAR TICKER ============
 with tab_buscar:
     st.subheader("Buscar Dados da Empresa")
-    st.markdown("Use o ticker da Yahoo Finance (ex: `AAPL`, `PETR4.SA`, `BAC`, `MSFT`, `VALE3.SA`)")
-    ticker_input = st.text_input("Ticker", value="BAC", key="busca_ticker")
-    if st.button("Buscar", key="btn_buscar"):
+    sp500_pendente = st.session_state.sp500_ticker
+    if sp500_pendente:
+        default_ticker = sp500_pendente
+    else:
+        default_ticker = "BAC"
+    ticker_input = st.text_input("Ticker", value=default_ticker, key="busca_ticker")
+    if st.button("Buscar", key="btn_buscar") or sp500_pendente:
+        if sp500_pendente:
+            st.session_state.sp500_ticker = None
         with st.spinner(f"Buscando dados de {ticker_input}..."):
             dados = ticker_search.buscar_empresa(ticker_input)
             if dados:
@@ -576,11 +590,15 @@ with tab_sp500:
             cols = st.columns(cols_per_row)
             for i, t in enumerate(row):
                 if cols[i].button(t, key=f"sp_{t}"):
-                    with st.spinner(f"A calcular {t}..."):
-                        from ticker_search import executar_analise_completa
+                    from ticker_search import executar_analise_completa
+                    with st.spinner(f"A carregar {t}..."):
                         res = executar_analise_completa(t)
                         if res:
                             dados, params = res
-                            st.success(f"{t}: Preco ${dados['preco']:.2f}")
+                            st.session_state.sp500_ticker = t
+                            st.session_state.sp500_dados = (dados, params)
+                            st.success(f"**{t}** carregado! Vá a outros tabs para calcular.")
+                        else:
+                            st.error(f"Nao foi possivel carregar {t}")
         if len(resultados_sp) > 120:
             st.caption(f"... e mais {len(resultados_sp) - 120} tickers")
