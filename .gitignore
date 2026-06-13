@@ -37,3 +37,6 @@ desktop.ini
 
 # Logs
 *.log
+
+# Cache
+__yf_cache__/

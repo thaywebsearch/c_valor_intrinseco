@@ -15,6 +15,11 @@ from calculadora_gordon import (
 )
 import ticker_search
 
+@st.cache_data(ttl=3600)
+def _buscar_empresa_cache(ticker):
+    return ticker_search.buscar_empresa(ticker)
+
+
 st.set_page_config(page_title="Calculadora de Valor Intrínseco", layout="wide")
 
 if "sp500_ticker" not in st.session_state:
@@ -74,7 +79,7 @@ with tab_buscar:
         if sp500_pendente:
             st.session_state.sp500_ticker = None
         with st.spinner(f"Buscando dados de {ticker_input}..."):
-            dados = ticker_search.buscar_empresa(ticker_input)
+            dados = _buscar_empresa_cache(ticker_input)
             if dados:
                 st.success(f"**{dados['nome']}** ({dados['ticker']}) — {dados['moeda']}")
                 col1, col2, col3, col4 = st.columns(4)

@@ -4,3 +4,4 @@ altair>=5.0.0
 numpy>=1.24.0
 yfinance>=0.2.30
 matplotlib>=3.7.0
+diskcache>=5.6.0

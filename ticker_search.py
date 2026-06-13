@@ -4,8 +4,14 @@ Ferramenta de busca de tickers via Yahoo Finance
 Busca dados fundamentalistas para a Calculadora de Valor Intrínseco
 """
 
+import os
 import time
 import yfinance as yf
+from diskcache import Cache as DiscoCache
+
+_cache_dir = os.path.join(os.path.dirname(__file__), "__yf_cache__")
+_cache = DiscoCache(_cache_dir, size_limit=500 * 1024 * 1024)
+_CACHE_TTL = 3600  # 1 hora
 
 
 def normalizar_ticker(ticker):
@@ -34,17 +40,24 @@ def buscar_ticker(ticker_str, max_tentativas=3):
 
 
 def buscar_empresa(query):
+    chave = f"buscar_empresa_{query.strip().upper()}"
+    if chave in _cache:
+        return _cache[chave]
     ticker_obj = buscar_ticker(query)
     if not ticker_obj:
         dados_demo = _dados_demo(query)
         if dados_demo:
+            _cache.set(chave, dados_demo, expire=_CACHE_TTL)
             return dados_demo
         return None
     try:
-        return extrair_dados(ticker_obj)
+        dados = extrair_dados(ticker_obj)
+        _cache.set(chave, dados, expire=_CACHE_TTL)
+        return dados
     except Exception:
         dados_demo = _dados_demo(query)
         if dados_demo:
+            _cache.set(chave, dados_demo, expire=_CACHE_TTL)
             return dados_demo
         return None
 
