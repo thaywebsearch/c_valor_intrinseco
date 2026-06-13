@@ -32,9 +32,9 @@ st.markdown("Gordon, P/B×ROE, H-Model, DCF, Graham, Owner Earnings, CAPM/WACC, 
 
 preco_mercado = 51.80
 
-tab_buscar, tab_g1, tab_g2, tab_pbv, tab_h, tab_dcf, tab_graham, tab_oe, tab_wacc, tab_rel, tab_conc, tab_sp500 = \
+tab_buscar, tab_g1, tab_g2, tab_pbv, tab_h, tab_dcf, tab_graham, tab_oe, tab_wacc, tab_rel, tab_conc, tab_sp500, tab_query = \
     st.tabs(["Buscar Ticker", "Gordon 1", "Gordon 2", "P/B × ROE", "H-Model",
-             "DCF", "Graham", "Owner Earnings", "CAPM/WACC", "Relativa", "Conclusão", "S&P 500"])
+             "DCF", "Graham", "Owner Earnings", "CAPM/WACC", "Relativa", "Conclusão", "S&P 500", "Query DB"])
 
 def sensibilidade_heatmap(tabela, titulo):
     tabela = tabela.copy()
@@ -619,3 +619,16 @@ with tab_sp500:
                             st.error(f"Nao foi possivel carregar {t}")
         if len(resultados_sp) > 120:
             st.caption(f"... e mais {len(resultados_sp) - 120} tickers")
+
+# ============ QUERY DB ============
+with tab_query:
+    st.subheader("Consultar Base de Dados (DuckDB)")
+    st.markdown("SQL livre sobre o hist\u00f3rico de tickers carregados.")
+    st.code("SELECT ticker, nome, preco, pe, roe, buscado_em FROM empresas ORDER BY buscado_em DESC LIMIT 10")
+    sql = st.text_area("SQL", value="SELECT ticker, nome, preco, pe, roe, buscado_em FROM empresas ORDER BY buscado_em DESC LIMIT 10", height=100)
+    if st.button("Executar", key="btn_query"):
+        df = ticker_search.consultar_banco(sql)
+        st.dataframe(df, use_container_width=True)
+        st.caption(f"{len(df)} linhas")
+    st.markdown("---")
+    st.markdown("**Colunas dispon\u00edveis:** ticker, nome, moeda, setor, industria, preco, market_cap, beta, pe, forward_pe, pb, ps, ev_ebitda, ev_ebit, dividend_yield, eps, forward_eps, bvps, dividends_12m, fcf_per_share, ebitda_per_share, receita_per_share, roe, roa, margem_liquida, margem_bruta, margem_ebitda, divida_total, caixa, divida_liquida, fcf, ebitda, receita, lucro_liquido, shares_outstanding, book_value, payout_ratio, buscado_em")

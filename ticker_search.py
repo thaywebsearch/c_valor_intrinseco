@@ -64,6 +64,59 @@ _cache_dir = os.path.join(os.path.dirname(__file__), "__yf_cache__")
 _cache = DiscoCache(_cache_dir, size_limit=500 * 1024 * 1024)
 _CACHE_TTL = 3600  # 1 hora
 
+# ============ BANCO DE DADOS (DuckDB) ============
+
+_duck_path = os.path.join(os.path.dirname(__file__), "stocks.duckdb")
+_db = None  # duckdb.DuckDBPyConnection, lazy init
+
+
+def _init_db():
+    global _db
+    if _db is not None:
+        return
+    import duckdb
+    _db = duckdb.connect(_duck_path)
+    _db.execute("""
+        CREATE TABLE IF NOT EXISTS empresas (
+            ticker VARCHAR, nome VARCHAR, moeda VARCHAR,
+            setor VARCHAR, industria VARCHAR,
+            preco DOUBLE, market_cap DOUBLE, beta DOUBLE,
+            pe DOUBLE, forward_pe DOUBLE, pb DOUBLE, ps DOUBLE,
+            ev_ebitda DOUBLE, ev_ebit DOUBLE,
+            dividend_yield DOUBLE, eps DOUBLE, forward_eps DOUBLE,
+            bvps DOUBLE, dividends_12m DOUBLE,
+            fcf_per_share DOUBLE, ebitda_per_share DOUBLE, receita_per_share DOUBLE,
+            roe DOUBLE, roa DOUBLE,
+            margem_liquida DOUBLE, margem_bruta DOUBLE, margem_ebitda DOUBLE,
+            divida_total DOUBLE, caixa DOUBLE, divida_liquida DOUBLE,
+            fcf DOUBLE, ebitda DOUBLE, receita DOUBLE, lucro_liquido DOUBLE,
+            shares_outstanding DOUBLE, book_value DOUBLE, payout_ratio DOUBLE,
+            sem_dados BOOLEAN,
+            buscado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+
+def _salvar_no_banco(dados: DadosEmpresa):
+    try:
+        _init_db()
+        cols = list(DadosEmpresa.model_fields.keys())
+        vals = [getattr(dados, c) for c in cols]
+        placeholders = ", ".join(["?"] * len(cols))
+        colnames = ", ".join(cols)
+        _db.execute(f"INSERT INTO empresas ({colnames}, buscado_em) VALUES ({placeholders}, CURRENT_TIMESTAMP)", vals)
+    except Exception:
+        pass
+
+
+def consultar_banco(sql):
+    import pandas as pd
+    _init_db()
+    try:
+        return _db.execute(sql).fetchdf()
+    except Exception as e:
+        return pd.DataFrame({"erro": [str(e)]})
+
 
 def normalizar_ticker(ticker):
     ticker = ticker.strip().upper()
@@ -93,22 +146,27 @@ def buscar_ticker(ticker_str, max_tentativas=3):
 def buscar_empresa(query):
     chave = f"buscar_empresa_{query.strip().upper()}"
     if chave in _cache:
-        return _cache[chave]
+        dados = _cache[chave]
+        _salvar_no_banco(dados)
+        return dados
     ticker_obj = buscar_ticker(query)
     if not ticker_obj:
         dados_demo = _dados_demo(query)
         if dados_demo:
             _cache.set(chave, dados_demo, expire=_CACHE_TTL)
+            _salvar_no_banco(dados_demo)
             return dados_demo
         return None
     try:
         dados = extrair_dados(ticker_obj)
         _cache.set(chave, dados, expire=_CACHE_TTL)
+        _salvar_no_banco(dados)
         return dados
     except Exception:
         dados_demo = _dados_demo(query)
         if dados_demo:
             _cache.set(chave, dados_demo, expire=_CACHE_TTL)
+            _salvar_no_banco(dados_demo)
             return dados_demo
         return None
 
