@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
+import plotly.graph_objects as go
 import numpy as np
 import sys
 import os
@@ -36,20 +36,26 @@ tab_buscar, tab_g1, tab_g2, tab_pbv, tab_h, tab_dcf, tab_graham, tab_oe, tab_wac
     st.tabs(["Buscar Ticker", "Gordon 1", "Gordon 2", "P/B × ROE", "H-Model",
              "DCF", "Graham", "Owner Earnings", "CAPM/WACC", "Relativa", "Conclusão", "S&P 500"])
 
-def sensibilidade_heatmap(df, titulo):
-    df_long = df.melt(id_vars=["g"], var_name="r", value_name="VI")
-    df_long = df_long[df_long["VI"].notna() & (df_long["VI"] != "N/A")]
-    df_long["VI"] = pd.to_numeric(df_long["VI"], errors="coerce")
-    if df_long.empty:
-        return None
-    chart = alt.Chart(df_long).mark_rect().encode(
-        x=alt.X("r:O", title="r (%)", sort=None),
-        y=alt.Y("g:O", title="g (%)", sort=None),
-        color=alt.Color("VI:Q", title="VI ($)",
-                        scale=alt.Scale(scheme="redyellowgreen")),
-        tooltip=["g", "r", alt.Tooltip("VI:Q", format=".2f")]
-    ).properties(width=500, height=400, title=titulo)
-    return chart
+def sensibilidade_heatmap(tabela, titulo):
+    tabela = tabela.copy()
+    for col in tabela.columns:
+        if col == "g":
+            continue
+        tabela[col] = pd.to_numeric(tabela[col], errors="coerce")
+    y_vals = tabela["g"].tolist()
+    x_vals = [c for c in tabela.columns if c != "g"]
+    z_vals = tabela[x_vals].to_numpy()
+    fig = go.Figure(data=go.Heatmap(
+        z=z_vals, x=x_vals, y=y_vals,
+        colorscale="RdYlGn",
+        text=[[f"{v:.2f}" if pd.notna(v) else "N/A" for v in row] for row in z_vals],
+        texttemplate="%{text}",
+        textfont={"size": 10},
+        hovertemplate="g: %{y}<br>r: %{x}<br>VI: $ %{z:.2f}<extra></extra>"
+    ))
+    fig.update_layout(title=titulo, width=500, height=400,
+                      xaxis_title="r (%)", yaxis_title="g (%)")
+    return fig
 
 
 def tabela_sensibilidade_modelo(func, faixa_g, faixa_r, **kwargs):
@@ -160,16 +166,17 @@ with tab_buscar:
                         for k, v in res.items() if v
                     ])
                     if not df_res.empty:
-                        df_plot = df_res.copy()
-                        df_plot["Cor"] = df_plot["VI"].apply(lambda v: "Acima" if v > preco else "Abaixo")
-                        chart = alt.Chart(df_plot).mark_bar().encode(
-                            x=alt.X("Modelo:N", sort=None),
-                            y=alt.Y("VI:Q", title="Valor Intrínseco ($)"),
-                            color=alt.Color("Cor:N", scale=alt.Scale(domain=["Acima", "Abaixo"], range=["#2ecc71", "#e74c3c"])),
-                            tooltip=["Modelo", alt.Tooltip("VI:Q", format=".2f")]
-                        ).properties(height=350)
-                        rule = alt.Chart(pd.DataFrame({"y": [preco]})).mark_rule(color="blue", strokeDash=[6, 3]).encode(y="y:Q")
-                        st.altair_chart(chart + rule, use_container_width=True)
+                        cores = ["#2ecc71" if v > preco else "#e74c3c" for v in df_res["VI"]]
+                        fig = go.Figure()
+                        fig.add_trace(go.Bar(x=df_res["Modelo"], y=df_res["VI"],
+                                             marker_color=cores,
+                                             text=[f"$ {v:.2f}" if v else "" for v in df_res["VI"]],
+                                             textposition="outside"))
+                        fig.add_hline(y=preco, line_dash="dash", line_color="blue",
+                                      annotation_text=f"Preço $ {preco:.2f}")
+                        fig.update_layout(height=350, xaxis_title="Modelo",
+                                          yaxis_title="Valor Intrínseco ($)")
+                        st.plotly_chart(fig, use_container_width=True)
                         st.dataframe(df_res.style.apply(
                             lambda row: ["background: #d4edda" if row.get("Margem","").startswith("+") else
                                          "background: #f8d7da" if row.get("Margem","").startswith("-") else
@@ -206,9 +213,9 @@ if tab_g1.button("Calcular", key="btn_g1"):
         faixa_g = np.round(np.linspace(max(0, g_g1-0.04), min(0.15, g_g1+0.04), 9), 3)
         faixa_r = np.round(np.linspace(max(0.03, r_g1-0.04), min(0.20, r_g1+0.04), 9), 3)
         df = tabela_sensibilidade_modelo(lambda gx, rx: gordon_1estagio(d0_g1, gx, rx), faixa_g, faixa_r)
-        chart = sensibilidade_heatmap(df, "Gordon 1 estágio - Sensibilidade")
-        if chart:
-            tab_g1.altair_chart(chart, use_container_width=True)
+        fig = sensibilidade_heatmap(df, "Gordon 1 estágio - Sensibilidade")
+        if fig:
+            tab_g1.plotly_chart(fig, use_container_width=True)
         tab_g1.dataframe(df.style.format(precision=2).background_gradient(cmap="RdYlGn", axis=None), hide_index=True)
     else:
         tab_g1.error("r deve ser maior que g")
@@ -259,9 +266,9 @@ if tab_pbv.button("Calcular", key="btn_pbv"):
         faixa_g = np.round(np.linspace(max(0, g_pbv), min(0.10, g_pbv+0.04), 9), 3)
         faixa_r = np.round(np.linspace(max(0.03, r_pbv-0.04), min(0.20, r_pbv+0.04), 9), 3)
         df = tabela_sensibilidade_modelo(lambda gx, rx: pbv_roe(bvps_pbv, roe_pbv, rx, gx), faixa_g, faixa_r)
-        chart = sensibilidade_heatmap(df, "P/B × ROE - Sensibilidade")
-        if chart:
-            tab_pbv.altair_chart(chart, use_container_width=True)
+        fig = sensibilidade_heatmap(df, "P/B × ROE - Sensibilidade")
+        if fig:
+            tab_pbv.plotly_chart(fig, use_container_width=True)
         tab_pbv.dataframe(df.style.format(precision=2).background_gradient(cmap="RdYlGn", axis=None), hide_index=True)
     else:
         tab_pbv.error("r deve ser maior que g")
@@ -290,9 +297,9 @@ if tab_h.button("Calcular", key="btn_h"):
         faixa_g = np.round(np.linspace(max(0, g2_h-0.03), min(0.10, g2_h+0.03), 9), 3)
         faixa_r = np.round(np.linspace(max(0.03, r_h-0.04), min(0.20, r_h+0.04), 9), 3)
         df = tabela_sensibilidade_modelo(lambda gx, rx: h_model(d0_h, g1_h, gx, n_h, rx), faixa_g, faixa_r)
-        chart = sensibilidade_heatmap(df, "H-Model - Sensibilidade")
-        if chart:
-            tab_h.altair_chart(chart, use_container_width=True)
+        fig = sensibilidade_heatmap(df, "H-Model - Sensibilidade")
+        if fig:
+            tab_h.plotly_chart(fig, use_container_width=True)
         tab_h.dataframe(df.style.format(precision=2).background_gradient(cmap="RdYlGn", axis=None), hide_index=True)
     else:
         tab_h.error("r deve ser maior que g2")
@@ -331,9 +338,9 @@ if tab_dcf.button("Calcular", key="btn_dcf"):
         df = tabela_sensibilidade_modelo(
             lambda gx, rx: ((dcf_2estagios(fcf0_dcf, g1_dcf, gx, n_dcf, rx) or 0) - divida_dcf) / acoes_dcf,
             faixa_g, faixa_r)
-        chart = sensibilidade_heatmap(df, "DCF - Sensibilidade ($/ação)")
-        if chart:
-            tab_dcf.altair_chart(chart, use_container_width=True)
+        fig = sensibilidade_heatmap(df, "DCF - Sensibilidade ($/ação)")
+        if fig:
+            tab_dcf.plotly_chart(fig, use_container_width=True)
         tab_dcf.dataframe(df.style.format(precision=2).background_gradient(cmap="RdYlGn", axis=None), hide_index=True)
     else:
         tab_dcf.error("WACC deve ser maior que g2")
@@ -392,9 +399,9 @@ if tab_oe.button("Calcular", key="btn_oe"):
         faixa_g = np.round(np.linspace(max(0, g_oe-0.03), min(0.10, g_oe+0.03), 9), 3)
         faixa_r = np.round(np.linspace(max(0.03, r_oe-0.04), min(0.20, r_oe+0.04), 9), 3)
         df = tabela_sensibilidade_modelo(lambda gx, rx: oe_valuation(oe, rx, gx), faixa_g, faixa_r)
-        chart = sensibilidade_heatmap(df, "Owner Earnings - Sensibilidade")
-        if chart:
-            tab_oe.altair_chart(chart, use_container_width=True)
+        fig = sensibilidade_heatmap(df, "Owner Earnings - Sensibilidade")
+        if fig:
+            tab_oe.plotly_chart(fig, use_container_width=True)
         tab_oe.dataframe(df.style.format(precision=2).background_gradient(cmap="RdYlGn", axis=None), hide_index=True)
     else:
         tab_oe.error("r deve ser maior que g")
@@ -536,19 +543,17 @@ if tab_conv.button("Calcular todos os modelos", key="btn_conc") or True:
     ])
     df_plot = df_conc.dropna(subset=["VI"]).copy()
     if not df_plot.empty:
-        df_plot["Cor"] = df_plot["VI"].apply(
-            lambda v: "Acima" if v > preco_mercado else "Abaixo")
-        chart = alt.Chart(df_plot).mark_bar().encode(
-            x=alt.X("Modelo:N", sort=None),
-            y=alt.Y("VI:Q", title="Valor Intrínseco ($)"),
-            color=alt.Color("Cor:N", scale=alt.Scale(
-                domain=["Acima", "Abaixo"],
-                range=["#2ecc71", "#e74c3c"])),
-            tooltip=["Modelo", alt.Tooltip("VI:Q", format=".2f")]
-        ).properties(height=400, title="Comparação dos Modelos")
-        rule = alt.Chart(pd.DataFrame({"y": [preco_mercado]})).mark_rule(
-            color="blue", strokeDash=[6, 3]).encode(y="y:Q")
-        tab_conv.altair_chart(chart + rule, use_container_width=True)
+        cores = ["#2ecc71" if v > preco_mercado else "#e74c3c" for v in df_plot["VI"]]
+        fig = go.Figure()
+        fig.add_trace(go.Bar(x=df_plot["Modelo"], y=df_plot["VI"],
+                             marker_color=cores,
+                             text=[f"$ {v:.2f}" if v else "" for v in df_plot["VI"]],
+                             textposition="outside"))
+        fig.add_hline(y=preco_mercado, line_dash="dash", line_color="blue",
+                      annotation_text=f"Preço $ {preco_mercado:.2f}")
+        fig.update_layout(height=400, title="Comparação dos Modelos",
+                          xaxis_title="Modelo", yaxis_title="Valor Intrínseco ($)")
+        tab_conv.plotly_chart(fig, use_container_width=True)
 
     tab_conv.dataframe(df_conc.style.apply(
         lambda row: ["background: #d4edda" if row.get("Margem","").startswith("+") else
