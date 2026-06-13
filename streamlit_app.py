@@ -30,11 +30,7 @@ if "sp500_dados" not in st.session_state:
 st.title("Calculadora de Valor Intrínseco")
 st.markdown("Gordon, P/B×ROE, H-Model, DCF, Graham, Owner Earnings, CAPM/WACC, Relativa e Busca por Ticker")
 
-side = st.sidebar
-preco_mercado = side.number_input("Preço de Mercado ($)", min_value=0.0, value=51.80, step=1.0, format="%.2f")
-carregar_bac = side.button("Carregar BAC")
-if st.session_state.sp500_ticker:
-    side.success(f"Ticker: **{st.session_state.sp500_ticker}** (${preco_mercado:.2f})")
+preco_mercado = 51.80
 
 tab_buscar, tab_g1, tab_g2, tab_pbv, tab_h, tab_dcf, tab_graham, tab_oe, tab_wacc, tab_rel, tab_conc, tab_sp500 = \
     st.tabs(["Buscar Ticker", "Gordon 1", "Gordon 2", "P/B × ROE", "H-Model",
@@ -194,7 +190,7 @@ with cols[1]:
     g_g1 = tab_g1.number_input("g (crescimento %)", value=7.0, step=0.5, format="%.1f", key="g1_g") / 100
 with cols[2]:
     r_g1 = tab_g1.number_input("r (retorno exigido %)", value=10.0, step=0.5, format="%.1f", key="g1_r") / 100
-if carregar_bac:
+if True:
     d0_g1 = 1.12
     g_g1 = 0.07
     r_g1 = 0.10
@@ -224,7 +220,7 @@ g1_g2 = cols[1].number_input("g1 alto %", value=8.0, step=0.5, format="%.1f", ke
 n_g2 = cols[2].number_input("n anos", value=5, step=1, key="g2_n")
 g2_g2 = cols[3].number_input("g2 terminal %", value=4.0, step=0.5, format="%.1f", key="g2_g2") / 100
 r_g2 = cols[4].number_input("r %", value=10.0, step=0.5, format="%.1f", key="g2_r") / 100
-if carregar_bac:
+if True:
     d0_g2 = 1.12
     g1_g2 = 0.08
     n_g2 = 5
@@ -247,7 +243,7 @@ bvps_pbv = cols[0].number_input("BVPS", value=38.66, step=0.1, format="%.2f", ke
 roe_pbv = cols[1].number_input("ROE %", value=10.5, step=0.5, format="%.1f", key="pbv_roe") / 100
 r_pbv = cols[2].number_input("r %", value=10.0, step=0.5, format="%.1f", key="pbv_r") / 100
 g_pbv = cols[3].number_input("g % (0=EPV)", value=0.0, step=0.5, format="%.1f", key="pbv_g") / 100
-if carregar_bac:
+if True:
     bvps_pbv = 38.66
     roe_pbv = 0.105
     r_pbv = 0.10
@@ -277,7 +273,7 @@ g1_h = cols[1].number_input("g1 inicial %", value=8.0, step=0.5, format="%.1f", 
 g2_h = cols[2].number_input("g2 terminal %", value=4.0, step=0.5, format="%.1f", key="h_g2") / 100
 n_h = cols[3].number_input("n anos", value=5, step=1, key="h_n")
 r_h = cols[4].number_input("r %", value=10.0, step=0.5, format="%.1f", key="h_r") / 100
-if carregar_bac:
+if True:
     d0_h = 1.12
     g1_h = 0.08
     g2_h = 0.04
@@ -311,7 +307,7 @@ cols2 = tab_dcf.columns(4)
 wacc_dcf = cols2[0].number_input("WACC %", value=10.0, step=0.5, format="%.1f", key="dcf_wacc") / 100
 divida_dcf = cols2[1].number_input("Dívida Líquida (total)", value=5.0, step=1.0, format="%.2f", key="dcf_divida")
 acoes_dcf = cols2[2].number_input("Ações (total)", value=7.8, step=0.1, format="%.2f", key="dcf_acoes")
-if carregar_bac:
+if True:
     fcf0_dcf = 30.0
     g1_dcf = 0.06
     n_dcf = 5
@@ -346,7 +342,7 @@ if tab_dcf.button("Calcular", key="btn_dcf"):
 cols = tab_graham.columns(3)
 eps_g = cols[0].number_input("EPS (lucro por ação)", value=3.46, step=0.01, format="%.2f", key="graham_eps")
 bvps_g = cols[1].number_input("BVPS (book value)", value=38.66, step=0.01, format="%.2f", key="graham_bvps")
-if carregar_bac:
+if True:
     eps_g = 3.46
     bvps_g = 38.66
 if tab_graham.button("Calcular", key="btn_graham"):
@@ -376,7 +372,7 @@ oe_capex = cols[2].number_input("Capex Manut. / ação", value=0.30, step=0.01, 
 r_oe = cols[3].number_input("r %", value=10.0, step=0.5, format="%.1f", key="oe_r") / 100
 cols2_oe = tab_oe.columns(2)
 g_oe = cols2_oe[0].number_input("g % (0=EPV)", value=3.0, step=0.5, format="%.1f", key="oe_g") / 100
-if carregar_bac:
+if True:
     oe_lucro = 3.46
     oe_da = 0.50
     oe_capex = 0.30
@@ -413,7 +409,7 @@ eq_w = cols2_w[0].number_input("Equity (E)", value=340.0, step=10.0, format="%.1
 dv_w = cols2_w[1].number_input("Dívida (D)", value=280.0, step=10.0, format="%.1f", key="wacc_dv")
 rd_w = cols2_w[2].number_input("Rd (custo dívida %)", value=4.5, step=0.1, format="%.1f", key="wacc_rd") / 100
 t_w = cols2_w[3].number_input("T (IR %)", value=21.0, step=1.0, format="%.0f", key="wacc_t") / 100
-if carregar_bac:
+if True:
     rf_w = 0.0425
     beta_w = 1.35
     rm_w = 0.10
@@ -448,7 +444,7 @@ fator_fund = cols[1].number_input("Valor fundamental", value=3.46, step=0.01, fo
 cols2 = tab_rel.columns(3)
 fator_mult_setor = cols2[0].number_input("Múltiplo setorial", value=13.0, step=0.5, format="%.1f", key="rel_mult")
 fator_pm = cols2[1].number_input("Preço mercado", value=preco_mercado, step=1.0, format="%.2f", key="rel_pm")
-if carregar_bac:
+if True:
     fator_fund = 3.46
     fator_mult_setor = 13.0
     fator_nome = "P/E"
@@ -464,7 +460,7 @@ if tab_rel.button("Calcular", key="btn_rel"):
                 delta_color="normal" if ups and ups > 0 else ("inverse" if ups and ups < 0 else "off"))
 tab_rel.markdown("---")
 tab_rel.subheader("BAC vs. Setor (múltiplos pré-definidos)")
-if tab_rel.button("Calcular BAC múltiplos", key="btn_rel_bac") or carregar_bac:
+if tab_rel.button("Calcular BAC múltiplos", key="btn_rel_bac") or True:
     bac_mult = {
         "P/E":       {"fund": 3.46, "setor": 13.0},
         "P/B":       {"fund": 38.66, "setor": 1.10},
@@ -494,7 +490,7 @@ if tab_rel.button("Calcular BAC múltiplos", key="btn_rel_bac") or carregar_bac:
 
 # ============ CONCLUSÃO ============
 tab_conv = tab_conc
-if tab_conv.button("Calcular todos os modelos", key="btn_conc") or carregar_bac:
+if tab_conv.button("Calcular todos os modelos", key="btn_conc") or True:
     d0 = 1.12
     bvps = 38.66
     roe = 0.105
