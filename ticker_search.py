@@ -10,6 +10,55 @@ import asyncio
 import aiohttp
 import yfinance as yf
 from diskcache import Cache as DiscoCache
+from typing import Optional
+from pydantic import BaseModel
+
+
+class DadosEmpresa(BaseModel):
+    ticker: str = "N/A"
+    nome: str = "N/A"
+    moeda: str = "N/A"
+    setor: str = "N/A"
+    industria: str = "N/A"
+    preco: Optional[float] = None
+    market_cap: Optional[float] = None
+    beta: Optional[float] = None
+    pe: Optional[float] = None
+    forward_pe: Optional[float] = None
+    pb: Optional[float] = None
+    ps: Optional[float] = None
+    ev_ebitda: Optional[float] = None
+    ev_ebit: Optional[float] = None
+    dividend_yield: Optional[float] = None
+    eps: Optional[float] = None
+    forward_eps: Optional[float] = None
+    bvps: Optional[float] = None
+    dividends_12m: Optional[float] = None
+    fcf_per_share: Optional[float] = None
+    ebitda_per_share: Optional[float] = None
+    receita_per_share: Optional[float] = None
+    roe: Optional[float] = None
+    roa: Optional[float] = None
+    margem_liquida: Optional[float] = None
+    margem_bruta: Optional[float] = None
+    margem_ebitda: Optional[float] = None
+    divida_total: Optional[float] = None
+    caixa: Optional[float] = None
+    divida_liquida: Optional[float] = None
+    fcf: Optional[float] = None
+    ebitda: Optional[float] = None
+    receita: Optional[float] = None
+    lucro_liquido: Optional[float] = None
+    shares_outstanding: Optional[float] = None
+    book_value: Optional[float] = None
+    payout_ratio: Optional[float] = None
+    sem_dados: bool = False
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
+    def get(self, key, default=None):
+        return getattr(self, key, default)
 
 _cache_dir = os.path.join(os.path.dirname(__file__), "__yf_cache__")
 _cache = DiscoCache(_cache_dir, size_limit=500 * 1024 * 1024)
@@ -75,52 +124,53 @@ DEMO_DATA = {
 
 def _dados_demo(ticker):
     ticker_upper = ticker.strip().upper()
-    return DEMO_DATA.get(ticker_upper)
+    raw = DEMO_DATA.get(ticker_upper)
+    if raw:
+        return DadosEmpresa(**raw)
+    return None
 
 
 def extrair_dados(ticker_obj):
     info = ticker_obj.info or {}
-    dados = {
-        "ticker": info.get("symbol", "N/A"),
-        "nome": info.get("shortName") or info.get("longName", "N/A"),
-        "moeda": info.get("currency", "N/A"),
-        "setor": info.get("sector", "N/A"),
-        "industria": info.get("industry", "N/A"),
-        "preco": info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose"),
-        "market_cap": info.get("marketCap"),
-        "beta": info.get("beta"),
-        "pe": info.get("trailingPE"),
-        "forward_pe": info.get("forwardPE"),
-        "pb": info.get("priceToBook"),
-        "ps": info.get("priceToSalesTrailing12Months"),
-        "ev_ebitda": info.get("enterpriseToEbitda"),
-        "ev_ebit": info.get("enterpriseToEbit"),
-        "dividend_yield": info.get("dividendYield"),
-        "eps": info.get("trailingEps"),
-        "forward_eps": info.get("forwardEbitda"),
-        "bvps": _bvps(info),
-        "dividends_12m": _dividends_12m(ticker_obj),
-        "fcf_per_share": _fcf_per_share(info),
-        "ebitda_per_share": _ebitda_per_share(info),
-        "receita_per_share": _receita_per_share(info),
-        "roe": info.get("returnOnEquity"),
-        "roa": info.get("returnOnAssets"),
-        "margem_liquida": info.get("profitMargins"),
-        "margem_bruta": info.get("grossMargins"),
-        "margem_ebitda": info.get("ebitdaMargins"),
-        "divida_total": info.get("totalDebt"),
-        "caixa": info.get("totalCash"),
-        "divida_liquida": _divida_liquida(info),
-        "fcf": info.get("freeCashflow"),
-        "ebitda": info.get("ebitda"),
-        "receita": info.get("totalRevenue"),
-        "lucro_liquido": info.get("netIncomeToCommon"),
-        "shares_outstanding": info.get("sharesOutstanding"),
-        "book_value": info.get("bookValue"),
-        "payout_ratio": info.get("payoutRatio"),
-        "sem_dados": False,
-    }
-    return dados
+    return DadosEmpresa(
+        ticker=info.get("symbol", "N/A"),
+        nome=info.get("shortName") or info.get("longName", "N/A"),
+        moeda=info.get("currency", "N/A"),
+        setor=info.get("sector", "N/A"),
+        industria=info.get("industry", "N/A"),
+        preco=info.get("currentPrice") or info.get("regularMarketPrice") or info.get("previousClose"),
+        market_cap=info.get("marketCap"),
+        beta=info.get("beta"),
+        pe=info.get("trailingPE"),
+        forward_pe=info.get("forwardPE"),
+        pb=info.get("priceToBook"),
+        ps=info.get("priceToSalesTrailing12Months"),
+        ev_ebitda=info.get("enterpriseToEbitda"),
+        ev_ebit=info.get("enterpriseToEbit"),
+        dividend_yield=info.get("dividendYield"),
+        eps=info.get("trailingEps"),
+        forward_eps=info.get("forwardEbitda"),
+        bvps=_bvps(info),
+        dividends_12m=_dividends_12m(ticker_obj),
+        fcf_per_share=_fcf_per_share(info),
+        ebitda_per_share=_ebitda_per_share(info),
+        receita_per_share=_receita_per_share(info),
+        roe=info.get("returnOnEquity"),
+        roa=info.get("returnOnAssets"),
+        margem_liquida=info.get("profitMargins"),
+        margem_bruta=info.get("grossMargins"),
+        margem_ebitda=info.get("ebitdaMargins"),
+        divida_total=info.get("totalDebt"),
+        caixa=info.get("totalCash"),
+        divida_liquida=_divida_liquida(info),
+        fcf=info.get("freeCashflow"),
+        ebitda=info.get("ebitda"),
+        receita=info.get("totalRevenue"),
+        lucro_liquido=info.get("netIncomeToCommon"),
+        shares_outstanding=info.get("sharesOutstanding"),
+        book_value=info.get("bookValue"),
+        payout_ratio=info.get("payoutRatio"),
+    )
 
 
 def _bvps(info):
