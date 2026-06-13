@@ -6,6 +6,8 @@ Busca dados fundamentalistas para a Calculadora de Valor Intrínseco
 
 import os
 import time
+import asyncio
+import aiohttp
 import yfinance as yf
 from diskcache import Cache as DiscoCache
 
@@ -319,6 +321,64 @@ def executar_analise_completa(ticker_str):
     exibir_dados(dados)
     params = gerar_parametros_calculo(dados)
     return dados, params
+
+
+# ============ ASYNC / BATCH ============
+
+_YF_QUOTE_URL = "https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1d"
+
+
+async def buscar_preco_async(ticker):
+    """Busca apenas o preco atual via aiohttp (rapido, sem yfinance)."""
+    url = _YF_QUOTE_URL.format(ticker=ticker)
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=10) as resp:
+                if resp.status != 200:
+                    return None
+                data = await resp.json()
+                result = data.get("chart", {}).get("result", [{}])[0]
+                meta = result.get("meta", {})
+                preco = meta.get("regularMarketPrice")
+                return preco
+    except Exception:
+        return None
+
+
+async def buscar_empresa_async(query):
+    """Versao assincrona de buscar_empresa via asyncio.to_thread."""
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, buscar_empresa, query)
+
+
+async def buscar_lote(tickers, max_concurrent=3):
+    """Busca dados completos de varios tickers em paralelo.
+    Retorna dict {ticker: (dados, params) ou None}."""
+    sem = asyncio.Semaphore(max_concurrent)
+
+    async def fetch_one(t):
+        async with sem:
+            try:
+                res = await buscar_empresa_async(t)
+                if not res:
+                    return t, None
+                params = gerar_parametros_calculo(res)
+                return t, (res, params)
+            except Exception:
+                return t, None
+
+    tasks = [fetch_one(t) for t in tickers]
+    resultados = await asyncio.gather(*tasks, return_exceptions=True)
+    saida = {}
+    for r in resultados:
+        if isinstance(r, tuple) and len(r) == 2:
+            saida[r[0]] = r[1]
+    return saida
+
+
+def buscar_lote_sync(tickers, max_concurrent=3):
+    """Wrapper sincrono para buscar_lote."""
+    return asyncio.run(buscar_lote(tickers, max_concurrent))
 
 
 if __name__ == "__main__":

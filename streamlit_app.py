@@ -584,8 +584,19 @@ with tab_sp500:
         resultados_sp = tickers_sp
     if resultados_sp:
         st.write(f"**{len(resultados_sp)}** resultados")
-        cols_per_row = 6
         visiveis = resultados_sp[:120]
+
+        if st.button("Carregar Top 10 em lote", key="sp_batch"):
+            from ticker_search import buscar_lote_sync
+            with st.spinner("A carregar 10 tickers em paralelo..."):
+                lote = buscar_lote_sync(visiveis[:10], max_concurrent=5)
+                ok = sum(1 for v in lote.values() if v)
+                st.success(f"{ok}/10 carregados")
+                for t, res in lote.items():
+                    if res:
+                        st.session_state[f"sp_dados_{t}"] = res
+
+        cols_per_row = 6
         rows = [visiveis[i:i+cols_per_row] for i in range(0, len(visiveis), cols_per_row)]
         for row in rows:
             cols = st.columns(cols_per_row)
